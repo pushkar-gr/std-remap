@@ -6,6 +6,8 @@
 #include "stb_image.h"
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include "stb_image_resize2.h"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
 
 typedef struct {
   unsigned char r, g, b;
@@ -50,7 +52,7 @@ int main(int argc, char *argv[]) {
 
   unsigned char *target_img =
       stbi_load(target_path, &target_w, &target_h, &target_channels, 3);
-  if (src_img == NULL) {
+  if (target_img == NULL) {
     fprintf(stderr, "Error: Could not load target image at %s\n", source_path);
     stbi_image_free(src_img);
     return EXIT_FAILURE;
@@ -66,8 +68,8 @@ int main(int argc, char *argv[]) {
     return EXIT_FAILURE;
   }
 
-  stbir_resize_uint8_linear(src_img, src_w, src_h, 0, resized_src_img, target_h,
-                            target_w, 0, STBIR_RGB);
+  stbir_resize_uint8_linear(src_img, src_w, src_h, 0, resized_src_img, target_w,
+                            target_h, 0, STBIR_RGB);
   stbi_image_free(src_img);
 
   // flatten source and target images
@@ -89,7 +91,7 @@ int main(int argc, char *argv[]) {
 
     target_pixels[i].x = i % target_w;
     target_pixels[i].y = i / target_w;
-    source_pixels[i].luminance = get_luminance(
+    target_pixels[i].luminance = get_luminance(
         target_img[i * 3 + 0], target_img[i * 3 + 1], target_img[i * 3 + 2]);
   }
   free(resized_src_img);
@@ -116,6 +118,12 @@ int main(int argc, char *argv[]) {
   free(source_pixels);
   free(target_pixels);
 
+  // write final image to file
+  printf("Saving result to %s...\n", output_path);
+  stbi_write_png(output_path, target_w, target_h, 3, result_img, target_w * 3);
+  free(result_img);
+
+  printf("Done\n");
   return EXIT_SUCCESS;
 }
 
