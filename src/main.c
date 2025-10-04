@@ -20,6 +20,8 @@ void read_flags(int argc, char *argv[], const char **source_path,
                 const char **target_path, const char **output_path);
 // calculate luminance for pixel
 float get_luminance(unsigned char r, unsigned char g, unsigned char b);
+// compare 2 pixels
+int compare_pixel(const void *a, const void *b);
 
 int main(int argc, char *argv[]) {
   // default values
@@ -93,6 +95,27 @@ int main(int argc, char *argv[]) {
   free(resized_src_img);
   stbi_image_free(target_img);
 
+  printf("Sorting pixel list by luminance...\n");
+  qsort(source_pixels, num_pixles, sizeof(Pixel), compare_pixel);
+  qsort(target_pixels, num_pixles, sizeof(Pixel), compare_pixel);
+
+  // build final image
+  printf("Building the final image...\n");
+  unsigned char *result_img = (unsigned char *)malloc(num_pixles * 3);
+  if (!result_img) {
+    fprintf(stderr, "Error: Failed to allocate memory for final image\n");
+    return EXIT_FAILURE;
+  }
+
+  for (long i = 0; i < num_pixles; i++) {
+    long index = (long)(target_pixels[i].y * target_w + target_pixels[i].x) * 3;
+    result_img[index + 0] = source_pixels[i].r;
+    result_img[index + 1] = source_pixels[i].g;
+    result_img[index + 2] = source_pixels[i].b;
+  }
+  free(source_pixels);
+  free(target_pixels);
+
   return EXIT_SUCCESS;
 }
 
@@ -131,4 +154,14 @@ void read_flags(int argc, char *argv[], const char **source_path,
 
 float get_luminance(unsigned char r, unsigned char g, unsigned char b) {
   return 0.2126f * r + 0.7152f * g + 0.0722f * b;
+}
+
+int compare_pixel(const void *a, const void *b) {
+  Pixel *p1 = (Pixel *)a;
+  Pixel *p2 = (Pixel *)b;
+  if (p1->luminance < p2->luminance)
+    return -1;
+  if (p1->luminance > p2->luminance)
+    return 1;
+  return 0;
 }
