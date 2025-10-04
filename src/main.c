@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+ #define STB_IMAGE_IMPLEMENTATION
+ #include "stb_image.h"
+
 // show help message
 void show_usage(const char *name);
 // read input flags
@@ -23,6 +26,21 @@ int main(int argc, char *argv[]) {
   printf("  Target: %s\n", target_path);
   printf("  Output: %s\n", output_path);
   printf("-------------------------\n");
+
+  //load source and target images
+  int src_w, src_h, src_channels, target_w, target_h, target_channels;
+  unsigned char *src_img = stbi_load(source_path, &src_w, &src_h, &src_channels, 3);
+  if (src_img == NULL) {
+    fprintf(stderr, "Error: Could not load source image at %s\n", source_path);
+    return EXIT_FAILURE;
+  }
+
+  unsigned char *target_img = stbi_load(target_path, &target_w, &target_h, &target_channels, 3);
+  if (src_img == NULL) {
+    fprintf(stderr, "Error: Could not load target image at %s\n", source_path);
+    stbi_image_free(src_img);
+    return EXIT_FAILURE;
+  }
 
   return EXIT_SUCCESS;
 }
