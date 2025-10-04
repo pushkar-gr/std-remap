@@ -2,8 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 
- #define STB_IMAGE_IMPLEMENTATION
- #include "stb_image.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+#define STB_IMAGE_RESIZE_IMPLEMENTATION
+#include "stb_image_resize2.h"
 
 // show help message
 void show_usage(const char *name);
@@ -27,20 +29,36 @@ int main(int argc, char *argv[]) {
   printf("  Output: %s\n", output_path);
   printf("-------------------------\n");
 
-  //load source and target images
+  // load source and target images
   int src_w, src_h, src_channels, target_w, target_h, target_channels;
-  unsigned char *src_img = stbi_load(source_path, &src_w, &src_h, &src_channels, 3);
+  unsigned char *src_img =
+      stbi_load(source_path, &src_w, &src_h, &src_channels, 3);
   if (src_img == NULL) {
     fprintf(stderr, "Error: Could not load source image at %s\n", source_path);
     return EXIT_FAILURE;
   }
 
-  unsigned char *target_img = stbi_load(target_path, &target_w, &target_h, &target_channels, 3);
+  unsigned char *target_img =
+      stbi_load(target_path, &target_w, &target_h, &target_channels, 3);
   if (src_img == NULL) {
     fprintf(stderr, "Error: Could not load target image at %s\n", source_path);
     stbi_image_free(src_img);
     return EXIT_FAILURE;
   }
+
+  // resize source image
+  printf("Resizing source image to match target image dimensions (%dx%d)...\n",
+         target_w, target_h);
+  unsigned char *resized_src_img =
+      (unsigned char *)malloc(target_w * target_h * 3);
+  if (!resized_src_img) {
+    fprintf(stderr, "Error: Failed to allocate memory\n");
+    return EXIT_FAILURE;
+  }
+
+  stbir_resize_uint8_linear(src_img, src_w, src_h, 0, resized_src_img, target_h,
+                            target_w, 0, STBIR_RGB);
+  stbi_image_free(src_img);
 
   return EXIT_SUCCESS;
 }
