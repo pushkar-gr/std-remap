@@ -10,6 +10,7 @@
 #include "stb_image_write.h"
 
 #include "mapper/luminance_sorter/luminance_sorter.h"
+#include "mapper/swd_sorter/swd_sorter.h"
 
 typedef struct {
   unsigned char r, g, b;
@@ -21,16 +22,18 @@ typedef struct {
 void show_usage(const char *name);
 // read input flags
 void read_flags(int argc, char *argv[], const char **source_path,
-                const char **target_path, const char **output_path);
+                const char **target_path, const char **output_path,
+                const char **mapper);
 
 int main(int argc, char *argv[]) {
   // default values
   const char *source_path = "source.jpg";
   const char *target_path = "target.jpg";
   const char *output_path = "output.jpg";
+  const char *mapper = "ls";
 
   // read user flags
-  read_flags(argc, argv, &source_path, &target_path, &output_path);
+  read_flags(argc, argv, &source_path, &target_path, &output_path, &mapper);
 
   // print configuration
   printf("Configuration:\n");
@@ -77,7 +80,11 @@ int main(int argc, char *argv[]) {
     return EXIT_FAILURE;
   }
 
-  luminance_remap(&result_img, resized_src_img, target_img, target_w, target_h);
+  if (strcmp(mapper, "ls") == 0) {
+    luminance_remap(&result_img, resized_src_img, target_img, target_w, target_h);
+  } else if (strcmp(mapper, "swds") == 0) {
+    swd_remap(&result_img, resized_src_img, target_img, target_w, target_h);
+  }
 
   free(resized_src_img);
   stbi_image_free(target_img);
@@ -96,14 +103,20 @@ void show_usage(const char *name) {
           "Usage: %s [options]\n"
           "Options:\n"
           "  -h, --help\t\tShow this help message\n"
-          "  -h, --source FILE\tSource image path (default: source.jpg)\n"
+          "  -s, --source FILE\tSource image path (default: source.jpg)\n"
           "  -t, --target FILE\tTarget image path (default: target.jpg)\n"
-          "  -o, --output FILE\tOutput image path (default: output.jpg)\n",
+          "  -o, --output FILE\tOutput image path (default: output.jpg)\n"
+          "  -m, --mapper [mappers]\tChoose mapper (default: ls (luminance "
+          "sorter))\n"
+          "  Mappers:\n"
+          "  \t\tls: luminance sorter\n"
+          "  \t\tswds: SWD sorter\n",
           name);
 }
 
 void read_flags(int argc, char *argv[], const char **source_path,
-                const char **target_path, const char **output_path) {
+                const char **target_path, const char **output_path,
+                const char **mapper) {
   for (int i = 1; i < argc; i++) {
     if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
       show_usage(argv[0]);
@@ -120,6 +133,10 @@ void read_flags(int argc, char *argv[], const char **source_path,
                 strcmp(argv[i], "--output") == 0) &&
                i + 1 < argc) {
       *output_path = argv[++i];
+    } else if ((strcmp(argv[i], "-m") == 0 ||
+                strcmp(argv[i], "--mapper") == 0) &&
+               i + 1 < argc) {
+      *mapper = argv[++i];
     }
   }
 }
