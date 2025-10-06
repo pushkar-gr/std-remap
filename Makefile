@@ -14,7 +14,7 @@ TARGET = remap
 EXECUTABLE = $(BUILD_DIR)/$(TARGET)
 
 # source files (all .c files in src/)
-SRCS = $(wildcard src/*.c)
+SRCS = $(wildcard src/*.c) $(wildcard src/mapper/*/*.c)
 
 # object files (corresponding .o file for each .c)
 OBJS = $(patsubst src/%.c,$(BUILD_DIR)/%.o,$(SRCS))
@@ -29,7 +29,7 @@ $(EXECUTABLE): $(OBJS)
 
 # rule to comile source files into object files in BUILD_DIR
 $(BUILD_DIR)/%.o: src/%.c
-	@mkdir -p $(BUILD_DIR)
+	@mkdir -p $(dir $@)
 	@echo "Compiling $<..."
 	$(CC) $(CFLAGS) -c $< -o $@
 

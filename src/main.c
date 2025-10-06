@@ -9,6 +9,8 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
+#include "mapper/luminance_sorter/luminance_sorter.h"
+
 typedef struct {
   unsigned char r, g, b;
   int x, y;
@@ -20,10 +22,6 @@ void show_usage(const char *name);
 // read input flags
 void read_flags(int argc, char *argv[], const char **source_path,
                 const char **target_path, const char **output_path);
-// calculate luminance for pixel
-float get_luminance(unsigned char r, unsigned char g, unsigned char b);
-// compare 2 pixels
-int compare_pixel(const void *a, const void *b);
 
 int main(int argc, char *argv[]) {
   // default values
@@ -72,51 +70,17 @@ int main(int argc, char *argv[]) {
                             target_h, 0, STBIR_RGB);
   stbi_image_free(src_img);
 
-  // flatten source and target images
   long num_pixles = (long)target_w * target_h;
-  Pixel *source_pixels = (Pixel *)malloc(sizeof(Pixel) * num_pixles);
-  Pixel *target_pixels = (Pixel *)malloc(sizeof(Pixel) * num_pixles);
-  if (!source_pixels || !target_pixels) {
-    fprintf(stderr, "Error: Failed to allocate memory for pixel array\n");
-    return EXIT_FAILURE;
-  }
-
-  printf("Extracting and analyzing pixels...\n");
-  for (long i = 0; i < num_pixles; i++) {
-    source_pixels[i].r = resized_src_img[i * 3 + 0];
-    source_pixels[i].g = resized_src_img[i * 3 + 1];
-    source_pixels[i].b = resized_src_img[i * 3 + 2];
-    source_pixels[i].luminance = get_luminance(
-        source_pixels[i].r, source_pixels[i].g, source_pixels[i].b);
-
-    target_pixels[i].x = i % target_w;
-    target_pixels[i].y = i / target_w;
-    target_pixels[i].luminance = get_luminance(
-        target_img[i * 3 + 0], target_img[i * 3 + 1], target_img[i * 3 + 2]);
-  }
-  free(resized_src_img);
-  stbi_image_free(target_img);
-
-  printf("Sorting pixel list by luminance...\n");
-  qsort(source_pixels, num_pixles, sizeof(Pixel), compare_pixel);
-  qsort(target_pixels, num_pixles, sizeof(Pixel), compare_pixel);
-
-  // build final image
-  printf("Building the final image...\n");
   unsigned char *result_img = (unsigned char *)malloc(num_pixles * 3);
   if (!result_img) {
     fprintf(stderr, "Error: Failed to allocate memory for final image\n");
     return EXIT_FAILURE;
   }
 
-  for (long i = 0; i < num_pixles; i++) {
-    long index = (long)(target_pixels[i].y * target_w + target_pixels[i].x) * 3;
-    result_img[index + 0] = source_pixels[i].r;
-    result_img[index + 1] = source_pixels[i].g;
-    result_img[index + 2] = source_pixels[i].b;
-  }
-  free(source_pixels);
-  free(target_pixels);
+  luminance_remap(&result_img, resized_src_img, target_img, target_w, target_h);
+
+  free(resized_src_img);
+  stbi_image_free(target_img);
 
   // write final image to file
   printf("Saving result to %s...\n", output_path);
@@ -158,18 +122,4 @@ void read_flags(int argc, char *argv[], const char **source_path,
       *output_path = argv[++i];
     }
   }
-}
-
-float get_luminance(unsigned char r, unsigned char g, unsigned char b) {
-  return 0.2126f * r + 0.7152f * g + 0.0722f * b;
-}
-
-int compare_pixel(const void *a, const void *b) {
-  Pixel *p1 = (Pixel *)a;
-  Pixel *p2 = (Pixel *)b;
-  if (p1->luminance < p2->luminance)
-    return -1;
-  if (p1->luminance > p2->luminance)
-    return 1;
-  return 0;
 }
