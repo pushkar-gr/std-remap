@@ -10,9 +10,9 @@ typedef struct {
 } Pixel;
 
 // calculate luminance for pixel
-float get_luminance(unsigned char r, unsigned char g, unsigned char b);
+static inline float get_luminance(unsigned char r, unsigned char g, unsigned char b);
 // compare 2 pixels
-int compare_pixel(const void *a, const void *b);
+static inline int compare_pixel(const void *a, const void *b);
 
 void luminance_remap(unsigned char **result_img, const unsigned char *src_img,
                      const unsigned char *trgt_img, int w, int h) {
@@ -55,11 +55,11 @@ void luminance_remap(unsigned char **result_img, const unsigned char *src_img,
   free(target_pixels);
 }
 
-float get_luminance(unsigned char r, unsigned char g, unsigned char b) {
+static inline float get_luminance(unsigned char r, unsigned char g, unsigned char b) {
   return 0.2126f * r + 0.7152f * g + 0.0722f * b;
 }
 
-int compare_pixel(const void *a, const void *b) {
+static inline int compare_pixel(const void *a, const void *b) {
   Pixel *p1 = (Pixel *)a;
   Pixel *p2 = (Pixel *)b;
   if (p1->luminance < p2->luminance)
