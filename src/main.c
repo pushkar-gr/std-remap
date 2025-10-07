@@ -23,7 +23,7 @@ void show_usage(const char *name);
 // read input flags
 void read_flags(int argc, char *argv[], const char **source_path,
                 const char **target_path, const char **output_path,
-                const char **mapper);
+                const char **mapper, int *L);
 
 int main(int argc, char *argv[]) {
   // default values
@@ -31,9 +31,10 @@ int main(int argc, char *argv[]) {
   const char *target_path = "target.jpg";
   const char *output_path = "output.jpg";
   const char *mapper = "ls";
+  int L = 50;
 
   // read user flags
-  read_flags(argc, argv, &source_path, &target_path, &output_path, &mapper);
+  read_flags(argc, argv, &source_path, &target_path, &output_path, &mapper, &L);
 
   // print configuration
   printf("Configuration:\n");
@@ -81,9 +82,10 @@ int main(int argc, char *argv[]) {
   }
 
   if (strcmp(mapper, "ls") == 0) {
-    luminance_remap(&result_img, resized_src_img, target_img, target_w, target_h);
+    luminance_remap(&result_img, resized_src_img, target_img, target_w,
+                    target_h);
   } else if (strcmp(mapper, "swds") == 0) {
-    swd_remap(&result_img, resized_src_img, target_img, target_w, target_h);
+    swd_remap(&result_img, resized_src_img, target_img, target_w, target_h, L);
   }
 
   free(resized_src_img);
@@ -108,6 +110,7 @@ void show_usage(const char *name) {
           "  -o, --output FILE\tOutput image path (default: output.jpg)\n"
           "  -m, --mapper [mappers]\tChoose mapper (default: ls (luminance "
           "sorter))\n"
+          "-l, -L\t\tnumber of slices for SWD sorter (default: 50)\n"
           "  Mappers:\n"
           "  \t\tls: luminance sorter\n"
           "  \t\tswds: SWD sorter\n",
@@ -116,7 +119,7 @@ void show_usage(const char *name) {
 
 void read_flags(int argc, char *argv[], const char **source_path,
                 const char **target_path, const char **output_path,
-                const char **mapper) {
+                const char **mapper, int *L) {
   for (int i = 1; i < argc; i++) {
     if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
       show_usage(argv[0]);
@@ -137,6 +140,9 @@ void read_flags(int argc, char *argv[], const char **source_path,
                 strcmp(argv[i], "--mapper") == 0) &&
                i + 1 < argc) {
       *mapper = argv[++i];
+    } else if ((strcmp(argv[i], "-L") == 0 || (strcmp(argv[i], "-l") == 0)) &&
+               i + 1 < argc) {
+      *L = atoi(argv[++i]);
     }
   }
 }
