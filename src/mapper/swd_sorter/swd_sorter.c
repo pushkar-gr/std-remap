@@ -13,8 +13,8 @@ typedef struct {
 } Pixel;
 
 // get dot product of [r, g, b] and random vector
-static inline float get_dot_product(unsigned char r, unsigned char g, unsigned char b,
-                             float *vector);
+static inline float get_dot_product(unsigned char r, unsigned char g,
+                                    unsigned char b, float *vector);
 // compare 2 pixels
 static inline int compare_pixel(const void *a, const void *b);
 // generate random float between -1.0 to +1.0
@@ -92,7 +92,8 @@ void swd_remap(unsigned char **result_img, const unsigned char *src_img,
                           target_pixels[i].b, unit_vector);
     }
     if (L % 10 == 0) {
-      printf("Sorting pixel list by dot product for L = %d...\n", initial_l - L);
+      printf("Sorting pixel list by dot product for L = %d...\n",
+             initial_l - L);
     }
     qsort(source_pixels, num_pixles, sizeof(Pixel), compare_pixel);
     qsort(target_pixels, num_pixles, sizeof(Pixel), compare_pixel);
@@ -146,8 +147,8 @@ void swd_remap(unsigned char **result_img, const unsigned char *src_img,
   free(target_pixels);
 }
 
-static inline float get_dot_product(unsigned char r, unsigned char g, unsigned char b,
-                             float *vector) {
+static inline float get_dot_product(unsigned char r, unsigned char g,
+                                    unsigned char b, float *vector) {
   return vector[0] * r + vector[1] * g + vector[2] * b;
 }
 
