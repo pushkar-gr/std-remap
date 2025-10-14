@@ -105,20 +105,41 @@ void swd_remap(unsigned char **result_img, const unsigned char *src_img,
       x += source_pixels[i].pos_x[l];
       y += source_pixels[i].pos_y[l];
     }
-    source_pixels[i].x = x / L;
-    source_pixels[i].y = y / L;
+    source_pixels[i].x = std::clamp(x / L, 0l, num_pixles);
+    source_pixels[i].y = std::clamp(y / L, 0l, num_pixles);
   }
 
   // build final image
   std::cout << "Building the final image..." << std::endl;
+  std::vector<bool> occupied_pixels(num_pixles, false);
 
   for (long i = 0; i < num_pixles; i++) {
-    long index = (long)(source_pixels[i].y * w + source_pixels[i].x);
-    long final_pos = index * 3;
+    // calculate best position for the pixel
+    long best_target_idx = -1;
+    float min_distance_sq = -1;
 
-    *((*result_img) + final_pos + 0) = source_pixels[i].r;
-    *((*result_img) + final_pos + 1) = source_pixels[i].g;
-    *((*result_img) + final_pos + 2) = source_pixels[i].b;
+    for (long j = 0; j < num_pixles; j++) {
+      if (!occupied_pixels[j]) {
+        long tx = j % w;
+        long ty = j / 2;
+
+        float distance_sq =
+            pow(source_pixels[i].x - tx, 2) + pow(source_pixels[i].y - ty, 2);
+
+        if (best_target_idx == -1 || distance_sq < min_distance_sq) {
+          min_distance_sq = distance_sq;
+          best_target_idx = j;
+        }
+      }
+    }
+    if (best_target_idx != -1) {
+      long final_pos = best_target_idx * 3;
+
+      *((*result_img) + final_pos + 0) = source_pixels[i].r;
+      *((*result_img) + final_pos + 1) = source_pixels[i].g;
+      *((*result_img) + final_pos + 2) = source_pixels[i].b;
+      occupied_pixels[best_target_idx] = true;
+    }
   }
 }
 } // namespace SwdSorter
