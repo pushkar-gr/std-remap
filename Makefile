@@ -1,8 +1,8 @@
 # compiler
-CC = gcc
+CXX = g++
 
 # compiler flags
-CFLAGS = -std=c17 -Wall -O2 -Iinclude
+CXXFLAGS = -std=c++17 -Wall -O2 -Iinclude
 
 # build directory
 BUILD_DIR = build
@@ -13,11 +13,11 @@ TARGET = remap
 # path to the final executable
 EXECUTABLE = $(BUILD_DIR)/$(TARGET)
 
-# source files (all .c files in src/)
-SRCS = $(wildcard src/*.c) $(wildcard src/mapper/*/*.c)
+# source files (all .cpp files in src/)
+SRCS = $(wildcard src/*.cpp) $(wildcard src/mapper/*/*.cpp)
 
-# object files (corresponding .o file for each .c)
-OBJS = $(patsubst src/%.c,$(BUILD_DIR)/%.o,$(SRCS))
+# object files (corresponding .o file for each .cpp)
+OBJS = $(patsubst src/%.cpp,$(BUILD_DIR)/%.o,$(SRCS))
 
 # default rule: build everything
 all: $(EXECUTABLE)
@@ -25,13 +25,13 @@ all: $(EXECUTABLE)
 # rule to link the executable
 $(EXECUTABLE): $(OBJS)
 	@echo "Linking..."
-	$(CC) $(OBJS) -o $@ -lm
+	$(CXX) $(OBJS) -o $@ -lm
 
 # rule to comile source files into object files in BUILD_DIR
-$(BUILD_DIR)/%.o: src/%.c
+$(BUILD_DIR)/%.o: src/%.cpp
 	@mkdir -p $(dir $@)
 	@echo "Compiling $<..."
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # rule to clean up comiled files
 clean:
