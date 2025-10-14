@@ -110,7 +110,7 @@ void swd_remap(unsigned char **result_img, const unsigned char *src_img,
   }
 
   // build final image
-  printf("Building the final image...\n");
+  std::cout << "Building the final image..." << std::endl;
 
   for (long i = 0; i < num_pixles; i++) {
     long index = (long)(source_pixels[i].y * w + source_pixels[i].x);
