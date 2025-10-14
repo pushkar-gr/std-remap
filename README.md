@@ -1,6 +1,6 @@
 # std::remap
 
-A small C program that creates an "image anagram": it reconstructs a target image using only pixels taken from a source image.
+A small C++ program that creates an "image anagram": it reconstructs a target image using only pixels taken from a source image.
 
 About
 -----
@@ -8,7 +8,7 @@ std::remap resizes the source to the target size, computes a luminance value for
 
 Requirements
 ------------
-- Make and a C compiler (gcc or clang) with C17 support
+- Make and a C++ compiler (g++) with C++17 support
 - The project includes single-file stb libraries in include/:
   - stb_image.h
   - stb_image_resize2.h
