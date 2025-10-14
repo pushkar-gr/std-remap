@@ -39,7 +39,8 @@ static void random_unit_vector(std::vector<float> &unit_vector);
 namespace SwdSorter {
 
 void swd_remap(unsigned char **result_img, const unsigned char *src_img,
-               const unsigned char *target_img, int w, int h, int L) {
+               const unsigned char *target_img, int w, int h, int L,
+               const char *placement) {
   // flatten source and target images
   long num_pixles = (long)w * h;
   std::vector<Pixel> source_pixels;

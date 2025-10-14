@@ -1,4 +1,5 @@
 #include "mapper/swd_sorter/swd_sorter.hpp"
+#include <cstdlib>
 #include <iostream>
 #include <stdlib.h>
 #include <string.h>
@@ -37,6 +38,7 @@ private:
   const char *output_path;
   const char *mapper;
   int L;
+  const char *placement;
 
   // images
   unsigned char *src_img;
@@ -67,6 +69,7 @@ StdRemap::StdRemap() {
   this->target_path = "target.jpg";
   this->output_path = "output.jpg";
   this->mapper = "ls";
+  this->mapper = "auction";
   this->L = 50;
 }
 
@@ -94,6 +97,10 @@ void StdRemap::read_flags(int argc, char *argv[]) {
     } else if ((strcmp(argv[i], "-L") == 0 || (strcmp(argv[i], "-l") == 0)) &&
                i + 1 < argc) {
       this->L = atoi(argv[++i]);
+    } else if ((strcmp(argv[i], "-p") == 0 ||
+                (strcmp(argv[i], "--placement") == 0)) &&
+               i + 1 < argc) {
+      this->placement = argv[++i];
     }
   }
   this->print_config();
@@ -148,7 +155,11 @@ void StdRemap::build_output_image() {
                                      this->target_img, this->w, this->h);
   } else if (strcmp(this->mapper, "swds") == 0) {
     SwdSorter::swd_remap(&this->result_img, this->resized_src_img,
-                         this->target_img, this->w, this->h, this->L);
+                         this->target_img, this->w, this->h, this->L,
+                         this->placement);
+  } else {
+    std::cout << "Invalide mapper" << std::endl;
+    exit(EXIT_FAILURE);
   }
   free(this->resized_src_img);
   stbi_image_free(this->target_img);
@@ -168,14 +179,26 @@ void StdRemap::show_usage(const char *name) {
             << std::endl
             << "  -o, --output FILE\t\tOutput image path (default: output.jpg)"
             << std::endl
-            << "  -m, --mapper [mappers]\tChoose mapper (default: ls "
+            << "  -m, --mapper [MAPPER]\tChoose mapper (default: ls "
                "(luminance sorter))"
             << std::endl
-            << "  -l, -L\t\t\tnumber of slices for SWD sorter (default: 50)"
+            << "  -l, -L\t\t\tNumber of slices for SWD sorter (default: 50)"
+            << std::endl
+            << "  -p, --placement [ALGO]\tChoose placement algorithm for SWD "
+               "sorter (default: auction)"
+            << std::endl
             << std::endl
             << "  Mappers:" << std::endl
             << "  \t\tls: luminance sorter" << std::endl
-            << "  \t\tswds: SWD sorter" << std::endl;
+            << "  \t\tswds: SWD sorter" << std::endl
+            << std::endl
+            << "  Placement Algorithms (for swds)" << std::endl
+            << "  \t\tgreedy: Assigns each pixel to the closest available grid "
+               "location."
+            << std::endl
+            << "  \t\tauction: Uses ε-scaling auction algorithm to resolve "
+               "high-density conflicts."
+            << std::endl;
 }
 
 void StdRemap::print_config() {
