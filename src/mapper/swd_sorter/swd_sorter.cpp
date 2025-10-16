@@ -2,6 +2,7 @@
 #include <iostream>
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <vector>
 
@@ -36,8 +37,7 @@ static inline double random_double();
 // generate random unit vector
 static void random_unit_vector(std::vector<float> &unit_vector);
 
-namespace SwdSorter {
-
+namespace Mapper {
 void swd_remap(unsigned char **result_img, const unsigned char *src_img,
                const unsigned char *target_img, int w, int h, int L,
                const char *placement) {
@@ -112,38 +112,44 @@ void swd_remap(unsigned char **result_img, const unsigned char *src_img,
 
   // build final image
   std::cout << "Building the final image..." << std::endl;
-  std::vector<bool> occupied_pixels(num_pixles, false);
 
-  for (long i = 0; i < num_pixles; i++) {
-    // calculate best position for the pixel
-    long best_target_idx = -1;
-    float min_distance_sq = -1;
+  if (strcmp(placement, "greedy") == 0) {
+    std::vector<bool> occupied_pixels(num_pixles, false);
+    for (long i = 0; i < num_pixles; i++) {
+      // calculate best position for the pixel
+      long best_target_idx = -1;
+      float min_distance_sq = -1;
 
-    for (long j = 0; j < num_pixles; j++) {
-      if (!occupied_pixels[j]) {
-        long tx = j % w;
-        long ty = j / 2;
+      for (long j = 0; j < num_pixles; j++) {
+        if (!occupied_pixels[j]) {
+          long tx = j % w;
+          long ty = j / 2;
 
-        float distance_sq =
-            pow(source_pixels[i].x - tx, 2) + pow(source_pixels[i].y - ty, 2);
+          float distance_sq =
+              pow(source_pixels[i].x - tx, 2) + pow(source_pixels[i].y - ty, 2);
 
-        if (best_target_idx == -1 || distance_sq < min_distance_sq) {
-          min_distance_sq = distance_sq;
-          best_target_idx = j;
+          if (best_target_idx == -1 || distance_sq < min_distance_sq) {
+            min_distance_sq = distance_sq;
+            best_target_idx = j;
+          }
         }
       }
-    }
-    if (best_target_idx != -1) {
-      long final_pos = best_target_idx * 3;
+      if (best_target_idx != -1) {
+        long final_pos = best_target_idx * 3;
 
-      *((*result_img) + final_pos + 0) = source_pixels[i].r;
-      *((*result_img) + final_pos + 1) = source_pixels[i].g;
-      *((*result_img) + final_pos + 2) = source_pixels[i].b;
-      occupied_pixels[best_target_idx] = true;
+        *((*result_img) + final_pos + 0) = source_pixels[i].r;
+        *((*result_img) + final_pos + 1) = source_pixels[i].g;
+        *((*result_img) + final_pos + 2) = source_pixels[i].b;
+        occupied_pixels[best_target_idx] = true;
+      }
     }
+  } else if (strcmp(placement, "auction") == 0) {
+  } else {
+    std::cout << "Invalide placement algorithm" << std::endl;
+    exit(EXIT_FAILURE);
   }
 }
-} // namespace SwdSorter
+} // namespace Mapper
 
 static inline double random_double() {
   return ((double)rand() / RAND_MAX) * 2.0 - 1.0;
