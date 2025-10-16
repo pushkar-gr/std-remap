@@ -6,31 +6,10 @@
 #include <time.h>
 #include <vector>
 
+#include "pixel.hpp"
+#include "placement/auction.hpp"
+
 #include "swd_sorter.hpp"
-
-struct Pixel {
-  unsigned char r, g, b;
-  int x, y;
-  std::vector<int> pos_x;
-  std::vector<int> pos_y;
-  float dot_product;
-
-  Pixel(unsigned char r, unsigned char g, unsigned char b, int x, int y,
-        int l_count)
-      : r(r), g(g), b(b), x(x), y(y), pos_x(), pos_y(), dot_product(0) {
-    pos_x.reserve(l_count);
-    pos_y.reserve(l_count);
-  }
-  // get dot product of [r, g, b] and random vector
-  inline float get_dot_product(std::vector<float> &unit_vector) {
-    return unit_vector[0] * this->r + unit_vector[1] * this->g +
-           unit_vector[2] * this->b;
-  }
-  // compare 2 pixels
-  bool operator<(const Pixel &other) const {
-    return this->dot_product < other.dot_product;
-  }
-};
 
 // generate random float between -1.0 to +1.0
 static inline double random_double();
@@ -68,7 +47,7 @@ void swd_remap(unsigned char **result_img, const unsigned char *src_img,
         target_pixels[i].get_dot_product(unit_vector);
   }
   // sort pixels after calculating dot_product
-  std::cout << "Sorting pixel list by luminance..." << std::endl;
+  std::cout << "Sorting pixel list by dot product for L = 1" << std::endl;
   std::sort(source_pixels.begin(), source_pixels.end());
   std::sort(target_pixels.begin(), target_pixels.end());
 
@@ -106,8 +85,8 @@ void swd_remap(unsigned char **result_img, const unsigned char *src_img,
       x += source_pixels[i].pos_x[l];
       y += source_pixels[i].pos_y[l];
     }
-    source_pixels[i].x = std::clamp(x / L, 0l, num_pixles);
-    source_pixels[i].y = std::clamp(y / L, 0l, num_pixles);
+    source_pixels[i].avg_x = (float)x / L;
+    source_pixels[i].avg_y = (float)y / L;
   }
 
   // build final image
@@ -123,10 +102,10 @@ void swd_remap(unsigned char **result_img, const unsigned char *src_img,
       for (long j = 0; j < num_pixles; j++) {
         if (!occupied_pixels[j]) {
           long tx = j % w;
-          long ty = j / 2;
+          long ty = j / w;
 
           float distance_sq =
-              pow(source_pixels[i].x - tx, 2) + pow(source_pixels[i].y - ty, 2);
+              pow(source_pixels[i].avg_x - tx, 2) + pow(source_pixels[i].avg_y - ty, 2);
 
           if (best_target_idx == -1 || distance_sq < min_distance_sq) {
             min_distance_sq = distance_sq;
@@ -144,8 +123,23 @@ void swd_remap(unsigned char **result_img, const unsigned char *src_img,
       }
     }
   } else if (strcmp(placement, "auction") == 0) {
+    std::cout << "Starting auction algorithm for pixel placement..."
+              << std::endl;
+    std::vector<long> final_positions =
+        Placement::Auction::assign(source_pixels, w, h);
+    std::cout << "Auction finished. Building final image..." << std::endl;
+    for (long i = 0; i < num_pixles; i++) {
+      long index = final_positions[i];
+
+      if (index != -1) {
+        index *= 3;
+        *((*result_img) + index + 0) = source_pixels[i].r;
+        *((*result_img) + index + 1) = source_pixels[i].g;
+        *((*result_img) + index + 2) = source_pixels[i].b;
+      }
+    }
   } else {
-    std::cout << "Invalide placement algorithm" << std::endl;
+    std::cout << "Invalid placement algorithm" << std::endl;
     exit(EXIT_FAILURE);
   }
 }

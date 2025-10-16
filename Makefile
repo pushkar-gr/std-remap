@@ -14,7 +14,7 @@ TARGET = remap
 EXECUTABLE = $(BUILD_DIR)/$(TARGET)
 
 # source files (all .cpp files in src/)
-SRCS = $(wildcard src/*.cpp) $(wildcard src/mapper/*/*.cpp)
+SRCS = $(wildcard src/*.cpp) $(wildcard src/mapper/*/*.cpp) $(wildcard src/mapper/swd_sorter/*/*.cpp)
 
 # object files (corresponding .o file for each .cpp)
 OBJS = $(patsubst src/%.cpp,$(BUILD_DIR)/%.o,$(SRCS))

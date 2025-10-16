@@ -21,7 +21,7 @@ StdRemap::StdRemap() {
   this->target_path = "target.jpg";
   this->output_path = "output.jpg";
   this->mapper = "ls";
-  this->mapper = "auction";
+  this->placement = "auction";
   this->L = 50;
 }
 
@@ -110,7 +110,7 @@ void StdRemap::build_output_image() {
                       this->target_img, this->w, this->h, this->L,
                       this->placement);
   } else {
-    std::cout << "Invalide mapper" << std::endl;
+    std::cout << "Invalid mapper" << std::endl;
     exit(EXIT_FAILURE);
   }
   free(this->resized_src_img);
